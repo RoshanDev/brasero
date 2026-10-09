@@ -627,6 +627,8 @@ brasero_app_session_burn (BraseroApp *app,
 			return;
 		}
 
+		/* Stop loading/saving defaults before temporary tracks are created. */
+		g_clear_object (&settings);
 		result = brasero_app_burn (app,
 		                           BRASERO_BURN_SESSION (session),
 		                           FALSE);
@@ -636,13 +638,14 @@ brasero_app_session_burn (BraseroApp *app,
 
 		result = brasero_app_burn_options (app, session);
 		if (result == BRASERO_BURN_OK || result == BRASERO_BURN_RETRY) {
+			g_clear_object (&settings);
 			result = brasero_app_burn (app,
 			                           BRASERO_BURN_SESSION (session),
 			                           (result == BRASERO_BURN_RETRY));
 		}
 	}
 
-	g_object_unref (settings);
+	g_clear_object (&settings);
 }
 
 void

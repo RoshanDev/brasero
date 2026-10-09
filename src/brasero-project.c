@@ -1655,6 +1655,10 @@ brasero_project_burn (BraseroProject *project)
 		return;
 	}
 
+	/* The confirmed options belong to this operation. Temporary image
+	 * tracks must not reload the saved image-burning profile. */
+	g_clear_object (&settings);
+
 	project->priv->is_burning = 1;
 
 	/* This is to avoid having the settings being wrongly reflected or changed */
@@ -1672,8 +1676,6 @@ brasero_project_burn (BraseroProject *project)
 	project->priv->burnt = brasero_app_burn (brasero_app_get_default (),
 						 BRASERO_BURN_SESSION (project->priv->session),
 						 res == BRASERO_BURN_RETRY);
-
-	g_object_unref (settings);
 
 	/* empty the stack of temporary tracks */
 	while (brasero_burn_session_pop_tracks (BRASERO_BURN_SESSION (project->priv->session)) == BRASERO_BURN_RETRY);

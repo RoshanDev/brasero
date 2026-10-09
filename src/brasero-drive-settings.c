@@ -222,8 +222,8 @@ brasero_drive_settings_unbind_session (BraseroDriveSettings *self)
 
 		priv->dest_media = BRASERO_MEDIUM_NONE;
 
-		g_settings_unbind (priv->settings, "speed");
-		g_settings_unbind (priv->settings, "flags");
+		g_settings_unbind (priv->session, "speed");
+		g_settings_unbind (priv->session, "flags");
 
 		g_object_unref (priv->settings);
 		priv->settings = NULL;
@@ -253,6 +253,7 @@ brasero_drive_settings_rebind_session (BraseroDriveSettings *self)
 	||   brasero_drive_is_fake (drive)
 	||  !BRASERO_MEDIUM_VALID (brasero_medium_get_status (medium))
 	||   brasero_burn_session_get_input_type (BRASERO_BURN_SESSION (priv->session), type) != BRASERO_BURN_OK) {
+		brasero_track_type_free (type);
 		brasero_drive_settings_unbind_session (self);
 		return;
 	}
@@ -266,11 +267,9 @@ brasero_drive_settings_rebind_session (BraseroDriveSettings *self)
 		return;
 	}
 
-	brasero_track_type_free (priv->src_type);
+	/* Release the previous bindings before loading another profile. */
+	brasero_drive_settings_unbind_session (self);
 	priv->src_type = type;
-
-	if (priv->dest_drive)
-		g_object_unref (priv->dest_drive);
 
 	priv->dest_drive = g_object_ref (drive);
 
@@ -324,7 +323,7 @@ brasero_drive_settings_unset_session (BraseroDriveSettings *self)
 		                                      brasero_drive_settings_output_changed_cb,
 		                                      self);
 
-		g_settings_unbind (priv->config_settings, "tmpdir");
+		g_settings_unbind (priv->session, "tmpdir");
 		g_object_unref (priv->config_settings);
 
 		g_object_unref (priv->session);
