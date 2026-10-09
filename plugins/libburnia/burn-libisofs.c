@@ -464,6 +464,7 @@ brasero_libisofs_import_last_session (BraseroLibisofs *self,
 {
 	int result;
 	IsoReadOpts *opts;
+	IsoReadImageFeatures *features = NULL;
 	BraseroMedia media;
 	IsoDataSource *src;
 	goffset start_block;
@@ -498,7 +499,11 @@ brasero_libisofs_import_last_session (BraseroLibisofs *self,
 	iso_read_opts_set_start_block (opts, session_block);
 
 	/* import image */
-	result = iso_image_import (image, src, opts, NULL);
+	/* libisofs 1.5.6 dereferences features even though NULL is documented
+	 * as valid. Request the features and release them after import. */
+	result = iso_image_import (image, src, opts, &features);
+	if (features)
+		iso_read_image_features_destroy (features);
 	iso_data_source_unref (src);
 	iso_read_opts_free (opts);
 
