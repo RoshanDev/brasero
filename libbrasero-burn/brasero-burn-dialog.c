@@ -953,6 +953,11 @@ brasero_burn_dialog_previous_session_loss_cb (BraseroBurn *burn,
 						       _("_Import"), NULL,
 	                                               _("Only _Append"), NULL);
 	g_free (secondary);
+	/* Import must request a MERGE retry; Only Append continues unchanged. */
+	if (result == BRASERO_BURN_OK)
+		return BRASERO_BURN_RETRY;
+	if (result == BRASERO_BURN_RETRY)
+		return BRASERO_BURN_OK;
 	return result;
 }
 
