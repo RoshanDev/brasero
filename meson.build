@@ -160,6 +160,7 @@ subdir('libbrasero-utils')
 subdir('libbrasero-burn')
 subdir('src')
 subdir('plugins')
+subdir('tests')
 subdir('docs')
 # TODO: port to newer libnautilus-extension
 # subdir('nautilus')
