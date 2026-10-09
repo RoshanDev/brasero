@@ -410,29 +410,22 @@ brasero_drive_properties_set_flags (BraseroDriveProperties *self,
 
 static void
 brasero_drive_properties_set_toggle_state (BraseroDriveProperties *self,
-					   GtkWidget *toggle,
-					   BraseroBurnFlag flag,
-					   BraseroBurnFlag flags,
-					   BraseroBurnFlag supported,
-					   BraseroBurnFlag compulsory)
+                                         GtkWidget *toggle,
+                                         BraseroBurnFlag flag,
+                                         BraseroBurnFlag flags,
+                                         BraseroBurnFlag supported,
+                                         BraseroBurnFlag compulsory)
 {
-	if (!(supported & flag)) {
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (toggle), FALSE);
-		gtk_widget_set_sensitive (toggle, FALSE);
-		gtk_widget_hide (toggle);
-		return;
-	}
-
-	gtk_widget_show (toggle);
-	g_signal_handlers_block_by_func (toggle,
-					 brasero_drive_properties_set_flags,
-					 self);
-	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (toggle), (flags & flag));
-	g_signal_handlers_unblock_by_func (toggle,
-					   brasero_drive_properties_set_flags,
-					   self);
-
-	gtk_widget_set_sensitive (toggle, (compulsory & flag) == 0);
+	/* Refreshing the widget must never be interpreted as a user choice.
+	 * Match the actual toggled handlers, including the unsupported branch. */
+	g_signal_handlers_block_matched (toggle, G_SIGNAL_MATCH_DATA,
+	                                0, 0, NULL, NULL, self);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (toggle), (flags & flag) != 0);
+	gtk_widget_set_sensitive (toggle, (supported & flag) && !(compulsory & flag));
+	/* Keep a requested but unavailable option visible and checked. */
+	gtk_widget_set_visible (toggle, ((supported | flags) & flag) != 0);
+	g_signal_handlers_unblock_matched (toggle, G_SIGNAL_MATCH_DATA,
+	                                  0, 0, NULL, NULL, self);
 }
 
 static void
@@ -444,6 +437,9 @@ brasero_drive_properties_set_flags (BraseroDriveProperties *self,
 	BraseroDrivePropertiesPrivate *priv;
 
 	priv = BRASERO_DRIVE_PROPERTIES_PRIVATE (self);
+	if (brasero_burn_session_tag_lookup_int (BRASERO_BURN_SESSION (priv->session),
+	                                       BRASERO_SESSION_KEEP_OPEN))
+		flags |= BRASERO_BURN_FLAG_MULTI;
 
 	flags &= BRASERO_DRIVE_PROPERTIES_FLAGS;
 	supported &= BRASERO_DRIVE_PROPERTIES_FLAGS;
@@ -650,8 +646,8 @@ brasero_drive_properties_is_valid_cb (BraseroSessionCfg *session,
 				      BraseroDriveProperties *self)
 {
 	BraseroDrivePropertiesPrivate *priv;
-	BraseroBurnFlag compulsory;
-	BraseroBurnFlag supported;
+	BraseroBurnFlag compulsory = BRASERO_BURN_FLAG_NONE;
+	BraseroBurnFlag supported = BRASERO_BURN_FLAG_NONE;
 	BraseroBurnFlag flags;
 
 	priv = BRASERO_DRIVE_PROPERTIES_PRIVATE (self);

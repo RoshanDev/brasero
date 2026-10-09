@@ -1510,6 +1510,13 @@ start:
 	if (result != BRASERO_BURN_OK)
 		return result;
 
+	BRASERO_BURN_DEBUG (burn, "Pre-write flags=0x%x keep-open-requested=%d",
+	                    brasero_burn_session_get_flags (priv->session),
+	                    brasero_burn_session_tag_lookup_int (priv->session, BRASERO_SESSION_KEEP_OPEN));
+	result = brasero_burn_session_check_keep_open (priv->session, error);
+	if (result != BRASERO_BURN_OK)
+		return result;
+
 	/* actual running of task */
 	result = brasero_task_run (priv->task, &ret_error);
 
@@ -1736,7 +1743,7 @@ brasero_burn_check_session_consistency (BraseroBurn *burn,
 	BraseroBurnFlag compulsory = BRASERO_BURN_FLAG_NONE;
 	BraseroBurnPrivate *priv = BRASERO_BURN_PRIVATE (burn);
 
-	BRASERO_BURN_DEBUG (burn, "Checking session consistency");
+	BRASERO_BURN_DEBUG (burn, "Checking session consistency: flags=0x%x keep-open-requested=%d", brasero_burn_session_get_flags (priv->session), brasero_burn_session_tag_lookup_int (priv->session, BRASERO_SESSION_KEEP_OPEN));
 
 	/* make sure there is a track in the session. */
 	input = brasero_track_type_new ();
@@ -1835,6 +1842,12 @@ brasero_burn_check_session_consistency (BraseroBurn *burn,
 
 	brasero_burn_session_set_flags (priv->session, retval);
 	BRASERO_BURN_LOG_FLAGS (retval, "Flags after checking =");
+	BRASERO_BURN_DEBUG (burn, "Flags after consistency=0x%x", retval);
+	if (!output || brasero_track_type_get_has_medium (output)) {
+		result = brasero_burn_session_check_keep_open (priv->session, error);
+		if (result != BRASERO_BURN_OK)
+			return result;
+	}
 
 	/* Check missing applications/GStreamer plugins.
 	 * This is the best place. */
@@ -2763,6 +2776,11 @@ brasero_burn_record (BraseroBurn *burn,
 	g_return_val_if_fail (BRASERO_IS_BURN_SESSION (session), BRASERO_BURN_ERR);
 
 	priv = BRASERO_BURN_PRIVATE (burn);
+	if (brasero_burn_session_get_flags (session) & BRASERO_BURN_FLAG_MULTI)
+		brasero_burn_session_tag_add_int (session, BRASERO_SESSION_KEEP_OPEN, TRUE);
+	result = brasero_burn_session_check_keep_open (session, error);
+	if (result != BRASERO_BURN_OK)
+		return result;
 
 	/* make sure we're ready */
 	if (brasero_burn_session_get_status (session, NULL) != BRASERO_BURN_OK)

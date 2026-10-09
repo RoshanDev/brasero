@@ -2697,3 +2697,18 @@ brasero_burn_session_new ()
 	return obj;
 }
 
+
+/* Called before preparing a physical burn and again immediately before writing. */
+BraseroBurnResult
+brasero_burn_session_check_keep_open (BraseroBurnSession *session, GError **error)
+{
+	g_return_val_if_fail (BRASERO_IS_BURN_SESSION (session), BRASERO_BURN_ERR);
+	if (!brasero_burn_session_is_dest_file (session)
+	&& brasero_burn_session_tag_lookup_int (session, BRASERO_SESSION_KEEP_OPEN)
+	&& !(brasero_burn_session_get_flags (session) & BRASERO_BURN_FLAG_MULTI)) {
+		g_set_error (error, BRASERO_BURN_ERROR, BRASERO_BURN_ERROR_GENERAL,
+		             "%s", _("Burning was stopped because the disc cannot be kept open. No data was written."));
+		return BRASERO_BURN_ERR;
+	}
+	return BRASERO_BURN_OK;
+}

@@ -4973,3 +4973,6 @@ msgstr "请输入“%s --help“以查看所有可用选项\n"
 
 #~ msgid "%s, %d%% done"
 #~ msgstr "%s, %d%% 已完成"
+
+msgid "Burning was stopped because the disc cannot be kept open. No data was written."
+msgstr "无法保持光盘开放，刻录已停止。本次未写入数据。"

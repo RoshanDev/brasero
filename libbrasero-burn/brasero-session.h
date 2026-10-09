@@ -42,6 +42,8 @@
 
 G_BEGIN_DECLS
 
+#define BRASERO_SESSION_KEEP_OPEN "brasero::keep-open-requested"
+
 #define BRASERO_TYPE_BURN_SESSION         (brasero_burn_session_get_type ())
 #define BRASERO_BURN_SESSION(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), BRASERO_TYPE_BURN_SESSION, BraseroBurnSession))
 #define BRASERO_BURN_SESSION_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), BRASERO_TYPE_BURN_SESSION, BraseroBurnSessionClass))
@@ -288,6 +290,9 @@ brasero_burn_session_get_possible_output_formats (BraseroBurnSession *session,
 BraseroImageFormat
 brasero_burn_session_get_default_output_format (BraseroBurnSession *session);
 
+
+BraseroBurnResult
+brasero_burn_session_check_keep_open (BraseroBurnSession *session, GError **error);
 
 G_END_DECLS
 

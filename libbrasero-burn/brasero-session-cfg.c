@@ -1434,6 +1434,10 @@ brasero_session_cfg_add_flags (BraseroSessionCfg *session,
 	BraseroSessionCfgPrivate *priv;
 
 	priv = BRASERO_SESSION_CFG_PRIVATE (session);
+	/* Remember explicit intent independently of transient capability flags. */
+	if (flags & BRASERO_BURN_FLAG_MULTI)
+		brasero_burn_session_tag_add_int (BRASERO_BURN_SESSION (session),
+		                                 BRASERO_SESSION_KEEP_OPEN, TRUE);
 
 	if ((priv->supported & flags) != flags)
 		return;
@@ -1460,6 +1464,9 @@ void
 brasero_session_cfg_remove_flags (BraseroSessionCfg *session,
 				  BraseroBurnFlag flags)
 {
+	if (flags & BRASERO_BURN_FLAG_MULTI)
+		brasero_burn_session_tag_add_int (BRASERO_BURN_SESSION (session),
+		                                 BRASERO_SESSION_KEEP_OPEN, FALSE);
 	brasero_burn_session_remove_flag (BRASERO_BURN_SESSION (session), flags);
 
 	/* For this case reset all flags as some flags could
